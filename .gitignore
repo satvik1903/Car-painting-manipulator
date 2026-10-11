@@ -1,0 +1,14 @@
+# colcon build output
+build/
+install/
+log/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Assessment brief (private, not for a public repo)
+*.pdf
+
+# Editor files
+.vscode/
