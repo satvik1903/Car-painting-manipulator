@@ -28,6 +28,8 @@ def generate_launch_description():
         Command([FindExecutable(name="xacro")," ",xacro_file]),
         value_type=str,
     )
+    #loading world file
+    world_file=os.path.join(pkg_share, "worlds", "paint_booth.sdf")
     #start gazebo
     gazebo=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -36,7 +38,7 @@ def generate_launch_description():
 
             )
         ),
-        launch_arguments={"gz_args": "-r empty.sdf"}.items(),
+        launch_arguments={"gz_args": f"-r {world_file}"}.items(),
     )
 
     #robot state publisher
@@ -81,6 +83,14 @@ def generate_launch_description():
         output="screen",
         arguments=["arm_controller", "--controller-manager", "/controller_manager"],
     )
+
+        # Drives the two gantry slide joints (gantry_x_joint, gantry_y_joint).
+    gantry_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        output="screen",
+        arguments=["gantry_controller", "--controller-manager", "/controller_manager"],
+    )
  
     start_jsb_after_spawn = RegisterEventHandler(
         OnProcessExit(
@@ -92,6 +102,12 @@ def generate_launch_description():
         OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
             on_exit=[arm_controller_spawner],
+        )
+    )
+    start_gantry_after_arm = RegisterEventHandler(
+        OnProcessExit(
+            target_action=arm_controller_spawner,
+            on_exit=[gantry_controller_spawner],
         )
     )
  
@@ -107,6 +123,7 @@ def generate_launch_description():
             spawn_robot,
             start_jsb_after_spawn,
             start_arm_after_jsb,
+            start_gantry_after_arm,
         ]
     )
  

@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<!-- =========================================================================
+  gantry_macro.xacro
+  Overhead XY gantry for the painting cell. This file only DEFINES the
+  gantry (a recipe card). The top-level file calls it and bolts the arm on.
+
+  Chain:
+    world -> gantry_frame (fixed: two runway rails on the building pillars)
+          -> bridge       (prismatic, slides along x)
+          -> carriage     (prismatic, slides along y)
+          -> mount point  (where the arm's base_link is attached, upside down)
+
+  Frame: same as the world SDF. Origin = centre of the car spot on the floor.
+  The pillars in the world are at x = +-4.0, y = +-2.35 (0.3 m square),
+  so their inner faces are at y = +-2.2.
+========================================================================== -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- One place to change sizes. Everything below is computed from these. -->
+  <xacro:property name="rail_z"       value="3.8"/>   <!-- rail centre height -->
+  <xacro:property name="rail_len"     value="8.0"/>   <!-- pillar to pillar -->
+  <xacro:property name="rail_w"       value="0.2"/>   <!-- rail width (y) -->
+  <xacro:property name="rail_h"       value="0.3"/>   <!-- rail height (z) -->
+  <xacro:property name="rail_y"       value="2.09"/>  <!-- 2.2 face - 0.1 half width - 0.01 gap -->
+
+  <xacro:property name="bridge_w"     value="0.3"/>   <!-- along x -->
+  <xacro:property name="bridge_span"  value="4.38"/>  <!-- across y, rests on both rails -->
+  <xacro:property name="bridge_h"     value="0.3"/>
+  <!-- Bridge sits ON TOP of the rails: rail top + half bridge height -->
+  <xacro:property name="bridge_z"     value="${rail_z + rail_h/2 + bridge_h/2}"/>
+
+  <xacro:property name="car_size"     value="0.4"/>   <!-- carriage x and y -->
+  <xacro:property name="car_h"        value="0.25"/>
+  <!-- Carriage hangs UNDER the bridge: bridge bottom - half carriage height -->
+  <xacro:property name="carriage_z"   value="${bridge_z - bridge_h/2 - car_h/2}"/>
+  <!-- The arm bolts to the carriage's bottom face -->
+  <xacro:property name="mount_z"      value="${carriage_z - car_h/2}"/>
+
+  <xacro:macro name="xy_gantry" params="prefix">
+
+    <!-- ===================== gantry_frame (fixed) =====================
+         Two runway rails resting against the building pillars.
+         They never move, so this link is bolted to world with a fixed joint.
+         It still gets a mass and inertia so Gazebo treats it as a real body. -->
+    <link name="${prefix}gantry_frame">
+      <visual name="rail_left">
+        <origin xyz="0 ${rail_y} ${rail_z}" rpy="0 0 0"/>
+        <geometry><box size="${rail_len} ${rail_w} ${rail_h}"/></geometry>
+        <material name="gantry_steel"><color rgba="0.35 0.35 0.4 1.0"/></material>
+      </visual>
+      <visual name="rail_right">
+        <origin xyz="0 ${-rail_y} ${rail_z}" rpy="0 0 0"/>
+        <geometry><box size="${rail_len} ${rail_w} ${rail_h}"/></geometry>
+        <material name="gantry_steel"><color rgba="0.35 0.35 0.4 1.0"/></material>
+      </visual>
+      <collision>
+        <origin xyz="0 ${rail_y} ${rail_z}" rpy="0 0 0"/>
+        <geometry><box size="${rail_len} ${rail_w} ${rail_h}"/></geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 ${-rail_y} ${rail_z}" rpy="0 0 0"/>
+        <geometry><box size="${rail_len} ${rail_w} ${rail_h}"/></geometry>
+      </collision>
+      <!-- Two 50 kg rails. Inertia about the centre point between them:
+           each rail's own box inertia + 50 * 2.09^2 for being off-centre in y. -->
+      <inertial>
+        <origin xyz="0 0 ${rail_z}" rpy="0 0 0"/>
+        <mass value="100.0"/>
+        <inertia ixx="437.9" ixy="0" ixz="0" iyy="534.0" iyz="0" izz="970.4"/>
+      </inertial>
+    </link>
+
+    <joint name="${prefix}world_to_gantry" type="fixed">
+      <parent link="world"/>
+      <child link="${prefix}gantry_frame"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ===================== bridge (moves in x) =====================
+         A beam lying across both rails. The joint frame stays at the floor
+         origin, the box is drawn up at bridge_z (same trick as the gun:
+         frame at a meaningful point, shape offset in visual/collision). -->
+    <link name="${prefix}bridge">
+      <visual>
+        <origin xyz="0 0 ${bridge_z}" rpy="0 0 0"/>
+        <geometry><box size="${bridge_w} ${bridge_span} ${bridge_h}"/></geometry>
+        <material name="gantry_purple"><color rgba="0.5 0.47 0.87 1.0"/></material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${bridge_z}" rpy="0 0 0"/>
+        <geometry><box size="${bridge_w} ${bridge_span} ${bridge_h}"/></geometry>
+      </collision>
+      <!-- 200 kg box: ixx = m/12 (y^2 + z^2), iyy = m/12 (x^2 + z^2), izz = m/12 (x^2 + y^2) -->
+      <inertial>
+        <origin xyz="0 0 ${bridge_z}" rpy="0 0 0"/>
+        <mass value="200.0"/>
+        <inertia ixx="321.2" ixy="0" ixz="0" iyy="3.0" iyz="0" izz="321.2"/>
+      </inertial>
+    </link>
+
+    <!-- Prismatic = slides in a straight line along <axis>.
+         axis 1 0 0 -> slides along x.
+         Limits are in METRES (not radians like revolute joints):
+           +-3.4 m lets the arm get past each bumper (bumpers at +-2.4)
+           so the gun can point back at the front and rear of the car,
+           while staying clear of the pillars at +-4.0.
+         effort  = max force in newtons, velocity = max speed in m/s. -->
+    <joint name="${prefix}gantry_x_joint" type="prismatic">
+      <parent link="${prefix}gantry_frame"/>
+      <child link="${prefix}bridge"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-3.4" upper="3.4" effort="20000" velocity="0.5"/>
+    </joint>
+
+    <!-- ===================== carriage (moves in y) ===================== -->
+    <link name="${prefix}carriage">
+      <visual>
+        <origin xyz="0 0 ${carriage_z}" rpy="0 0 0"/>
+        <geometry><box size="${car_size} ${car_size} ${car_h}"/></geometry>
+        <material name="gantry_green"><color rgba="0.11 0.62 0.46 1.0"/></material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${carriage_z}" rpy="0 0 0"/>
+        <geometry><box size="${car_size} ${car_size} ${car_h}"/></geometry>
+      </collision>
+      <!-- 50 kg box, same box formula as the bridge -->
+      <inertial>
+        <origin xyz="0 0 ${carriage_z}" rpy="0 0 0"/>
+        <mass value="50.0"/>
+        <inertia ixx="0.927" ixy="0" ixz="0" iyy="0.927" iyz="0" izz="1.333"/>
+      </inertial>
+    </link>
+
+    <!-- axis 0 1 0 -> slides along y.
+         +-1.5 m: enough to shift about a metre past either side of the
+         car (sides at +-0.95) so the inverted arm can reach the lower
+         side panels, while staying well inside the rails. -->
+    <joint name="${prefix}gantry_y_joint" type="prismatic">
+      <parent link="${prefix}bridge"/>
+      <child link="${prefix}carriage"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5" upper="1.5" effort="10000" velocity="0.5"/>
+    </joint>
+
+    <!-- ===================== mount point =====================
+         An empty link on the carriage's bottom face. The top-level file
+         bolts the arm's base_link here, flipped upside down. -->
+    <link name="${prefix}arm_mount"/>
+    <joint name="${prefix}carriage_to_mount" type="fixed">
+      <parent link="${prefix}carriage"/>
+      <child link="${prefix}arm_mount"/>
+      <origin xyz="0 0 ${mount_z}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+</robot>

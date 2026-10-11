@@ -3,6 +3,7 @@
   <!-- Import urdf file  -->
   <xacro:include filename="$(find yuktiikuka)/urdf/kr20_r3100_macro.xacro"/>
   <xacro:include filename="$(find yuktiikuka)/urdf/kr_iontec_ros2_control_macro.xacro"/>
+  <xacro:include filename="$(find yuktiikuka)/urdf/gantry_macro.xacro"/>
   <!-- Read additional arguments  -->
   <xacro:arg name="driver_version" default="rsi_only"/>
   <!--<xacro:arg name="mode" default="hardware"/>-->
@@ -30,12 +31,15 @@
   <!-- world link -->
   <link name="world"/>
   <!-- robot links, joints -->
+  <xacro:xy_gantry prefix="$(arg prefix)"/>
   <xacro:kuka_kr20_r3100_robot prefix="$(arg prefix)" package_name="yuktiikuka"/>
-  <!-- default world - base_link joint -->
-  <joint name="$(arg prefix)world-base_link" type="fixed">
-    <parent link="world"/>
+    <!-- Arm hangs upside down under the carriage.
+       rpy = pi 0 0: turned 180 degrees about x, so the arm's
+       blue (z) axis now points DOWN toward the car. -->
+  <joint name="$(arg prefix)mount_to_base_link" type="fixed">
+    <parent link="$(arg prefix)arm_mount"/>
     <child link="$(arg prefix)base_link"/>
-    <origin xyz="$(arg x) $(arg y) $(arg z)" rpy="$(arg roll) $(arg pitch) $(arg yaw)"/>
+    <origin xyz="0 0 0" rpy="3.14159265 0 0"/>
   </joint>
         <!--Spray gun description-->
   <link name="spray_gun">
@@ -104,6 +108,8 @@
     <xacro:gz_joint name="$(arg prefix)joint_4" initial="0.0"/>
     <xacro:gz_joint name="$(arg prefix)joint_5" initial="0.0"/>
     <xacro:gz_joint name="$(arg prefix)joint_6" initial="0.0"/>
+    <xacro:gz_joint name="$(arg prefix)gantry_x_joint" initial="0.0"/>
+    <xacro:gz_joint name="$(arg prefix)gantry_y_joint" initial="0.0"/>
   </ros2_control>
 
     <!-- ============ Gazebo plugin ============ -->

@@ -1,0 +1,332 @@
+<?xml version="1.0" ?>
+<!-- =========================================================================
+  paint_booth.sdf
+  Gazebo Harmonic world built from the Yuktii reference layout (page 2).
+
+  Frame (same as our Python planning scripts and the robot):
+    origin = centre of the car's parking spot on the floor
+    x      = along the conveyor (car enters at -x, leaves at +x)
+    y      = across the booth (+y is the side with the support rooms)
+    z      = up
+    units  = metres
+
+  Layout (approximate, the drawing is "a general reference only"):
+    Entry zone   x -6 .. -4   y -2.5 .. 2.5   (2 x 5 m)
+    Paint booth  x -4 ..  4   y -2.5 .. 2.5   (8 x 5 m)
+    Exit zone    x  4 ..  6   y -2.5 .. 2.5   (2 x 5 m)
+    Rooms        3.0 m, 2.5 m, 4.0 m wide, 2.5 m deep, along +y
+    Overall      about 12 x 8 m
+
+  SDF vs URDF: URDF describes ONE robot. SDF can describe a whole WORLD:
+  physics settings, lights, the ground, and any number of models.
+========================================================================== -->
+<sdf version="1.9">
+  <world name="paint_booth">
+
+    <!-- =====================================================================
+      Physics: how the simulator steps time.
+      max_step_size 0.001 = 1 ms per step (1000 steps per simulated second).
+      real_time_factor 1  = try to run as fast as real time, not faster.
+    ====================================================================== -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- =====================================================================
+      System plugins. A custom world must list these itself; empty.sdf had
+      them built in, which is why we never saw them before.
+        Physics          -> gravity, joints, collisions actually happen
+        UserCommands     -> lets other programs ADD models. Our robot spawner
+                            (ros_gz_sim create) needs this, or spawning fails.
+        SceneBroadcaster -> sends the scene to the GUI. Without it the
+                            Gazebo window opens but shows nothing.
+    ====================================================================== -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+
+    <gravity>0 0 -9.81</gravity>
+
+    <!-- =====================================================================
+      Light: a "sun" shining down at an angle so walls cast shadows and
+      edges are easy to see in screenshots and the demo video.
+    ====================================================================== -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.4 0.3 -0.9</direction>
+    </light>
+
+    <!-- =====================================================================
+      Ground plane: an infinite flat floor with collision, so nothing
+      falls forever. static = true means it never moves.
+    ====================================================================== -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>40 40</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>40 40</size></plane></geometry>
+          <material>
+            <ambient>0.35 0.35 0.35 1</ambient>
+            <diffuse>0.35 0.35 0.35 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- =====================================================================
+      The building. One STATIC model with one link holding every wall.
+      static = true: physics treats it as fixed scenery, so it costs
+      almost nothing to simulate and cannot be knocked over.
+
+      Every wall below is a box:  <size> length_x length_y height </size>
+      and its <pose> is its CENTRE:  x y z roll pitch yaw
+      Walls are 4.5 m tall (centre z = 2.25), above the planned 3.8 m
+      gantry rails, and 0.2 m thick (room dividers 0.15 m).
+    ====================================================================== -->
+    <model name="paint_booth_building">
+      <static>true</static>
+      <link name="structure">
+
+        <!-- ========== Front outer wall (y = -2.6), see-through ========== -->
+        <!-- This is the wall between the camera and the robot, so it is
+             mostly transparent. Otherwise it would block every view. -->
+        <collision name="wall_front_col">
+          <pose>0 -2.6 2.25 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="wall_front_vis">
+          <pose>0 -2.6 2.25 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 4.5</size></box></geometry>
+          <transparency>0.8</transparency>
+          <material>
+            <ambient>0.7 0.8 0.9 1</ambient>
+            <diffuse>0.7 0.8 0.9 1</diffuse>
+          </material>
+        </visual>
+
+        <!-- ========== Back outer wall (y = 5.3), behind the rooms ========== -->
+        <collision name="wall_back_col">
+          <pose>0 5.3 2.25 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="wall_back_vis">
+          <pose>0 5.3 2.25 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 4.5</size></box></geometry>
+          <material>
+            <ambient>0.85 0.85 0.82 1</ambient>
+            <diffuse>0.85 0.85 0.82 1</diffuse>
+          </material>
+        </visual>
+
+        <!-- ========== Left outer wall (x = -6.1) with the car ENTRY opening ==========
+             The arrow on the drawing: the car comes in here. The wall is
+             split into two pieces with a 3 m gap between y = -1.5 and 1.5
+             (car width 1.9 m plus clearance). -->
+        <collision name="wall_left_a_col">
+          <pose>-6.1 -2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="wall_left_a_vis">
+          <pose>-6.1 -2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
+        </visual>
+        <collision name="wall_left_b_col">
+          <pose>-6.1 3.45 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+        </collision>
+        <visual name="wall_left_b_vis">
+          <pose>-6.1 3.45 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
+        </visual>
+
+        <!-- ========== Right outer wall (x = 6.1) with the car EXIT opening ========== -->
+        <collision name="wall_right_a_col">
+          <pose>6.1 -2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="wall_right_a_vis">
+          <pose>6.1 -2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
+        </visual>
+        <collision name="wall_right_b_col">
+          <pose>6.1 3.45 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+        </collision>
+        <visual name="wall_right_b_vis">
+          <pose>6.1 3.45 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+          <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
+        </visual>
+
+        <!-- ========== Partition wall (y = 2.6) between booth and rooms ==========
+             Split into 4 pieces to leave a 0.9 m DOOR into each room,
+             like the door arcs on the drawing:
+               door A: x -2.9 .. -2.0   door B: x -0.3 .. 0.6   door C: x 3.6 .. 4.5 -->
+        <collision name="partition_1_col">
+          <pose>-4.45 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>3.1 0.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="partition_1_vis">
+          <pose>-4.45 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>3.1 0.2 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+        <collision name="partition_2_col">
+          <pose>-1.15 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>1.7 0.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="partition_2_vis">
+          <pose>-1.15 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>1.7 0.2 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+        <collision name="partition_3_col">
+          <pose>2.1 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>3.0 0.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="partition_3_vis">
+          <pose>2.1 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>3.0 0.2 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+        <collision name="partition_4_col">
+          <pose>5.25 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>1.5 0.2 4.5</size></box></geometry>
+        </collision>
+        <visual name="partition_4_vis">
+          <pose>5.25 2.6 2.25 0 0 0</pose>
+          <geometry><box><size>1.5 0.2 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+
+        <!-- ========== Room dividers (along y, from y 2.7 to 5.2) ==========
+             Rooms placed side by side and centred: 3.0 + 2.5 + 4.0 = 9.5 m,
+               Room A x -4.75 .. -1.75  (3.0 m)  e.g. paint mixing room
+               Room B x -1.75 ..  0.75  (2.5 m)  e.g. control room
+               Room C x  0.75 ..  4.75  (4.0 m)  e.g. storage / maintenance
+             The two 1.25 m bays left over at each end are closed off. -->
+        <collision name="divider_1_col">
+          <pose>-4.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+        </collision>
+        <visual name="divider_1_vis">
+          <pose>-4.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+        <collision name="divider_2_col">
+          <pose>-1.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+        </collision>
+        <visual name="divider_2_vis">
+          <pose>-1.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+        <collision name="divider_3_col">
+          <pose>0.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+        </collision>
+        <visual name="divider_3_vis">
+          <pose>0.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+        <collision name="divider_4_col">
+          <pose>4.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+        </collision>
+        <visual name="divider_4_vis">
+          <pose>4.75 3.95 2.25 0 0 0</pose>
+          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
+        </visual>
+
+        <!-- ========== Columns at the booth boundaries (x = -4 and x = 4) ==========
+             The small squares on the drawing. They mark where the entry
+             and exit zones end and the paint booth begins. 0.3 x 0.3 m. -->
+        <collision name="col_entry_front_col">
+          <pose>-4 -2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+        </collision>
+        <visual name="col_entry_front_vis">
+          <pose>-4 -2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.45 1</ambient><diffuse>0.4 0.4 0.45 1</diffuse></material>
+        </visual>
+        <collision name="col_entry_back_col">
+          <pose>-4 2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+        </collision>
+        <visual name="col_entry_back_vis">
+          <pose>-4 2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.45 1</ambient><diffuse>0.4 0.4 0.45 1</diffuse></material>
+        </visual>
+        <collision name="col_exit_front_col">
+          <pose>4 -2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+        </collision>
+        <visual name="col_exit_front_vis">
+          <pose>4 -2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.45 1</ambient><diffuse>0.4 0.4 0.45 1</diffuse></material>
+        </visual>
+        <collision name="col_exit_back_col">
+          <pose>4 2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+        </collision>
+        <visual name="col_exit_back_vis">
+          <pose>4 2.35 2.25 0 0 0</pose>
+          <geometry><box><size>0.3 0.3 4.5</size></box></geometry>
+          <material><ambient>0.4 0.4 0.45 1</ambient><diffuse>0.4 0.4 0.45 1</diffuse></material>
+        </visual>
+
+        <!-- ========== Floor markings: VISUAL ONLY, no collision ==========
+             Very thin coloured boxes lying on the floor, so the zones are
+             easy to read in screenshots. No <collision>, so nothing can
+             bump into them. Slightly different heights stop them flickering
+             where they overlap. -->
+        <visual name="floor_entry">
+          <pose>-5 0 0.002 0 0 0</pose>
+          <geometry><box><size>2 5 0.004</size></box></geometry>
+          <material><ambient>0.85 0.75 0.3 1</ambient><diffuse>0.85 0.75 0.3 1</diffuse></material>
+        </visual>
+        <visual name="floor_booth">
+          <pose>0 0 0.002 0 0 0</pose>
+          <geometry><box><size>8 5 0.004</size></box></geometry>
+          <material><ambient>0.6 0.62 0.66 1</ambient><diffuse>0.6 0.62 0.66 1</diffuse></material>
+        </visual>
+        <visual name="floor_exit">
+          <pose>5 0 0.002 0 0 0</pose>
+          <geometry><box><size>2 5 0.004</size></box></geometry>
+          <material><ambient>0.4 0.7 0.45 1</ambient><diffuse>0.4 0.7 0.45 1</diffuse></material>
+        </visual>
+        <!-- Where the 4.8 x 1.9 m car stops for painting. -->
+        <visual name="floor_car_spot">
+          <pose>0 0 0.005 0 0 0</pose>
+          <geometry><box><size>4.8 1.9 0.004</size></box></geometry>
+          <material><ambient>0.3 0.3 0.33 1</ambient><diffuse>0.3 0.3 0.33 1</diffuse></material>
+        </visual>
+        <!-- Conveyor centre line, entry wall to exit wall. -->
+        <visual name="floor_conveyor_line">
+          <pose>0 0 0.008 0 0 0</pose>
+          <geometry><box><size>12 0.08 0.004</size></box></geometry>
+          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+
+      </link>
+    </model>
+
+  </world>
+</sdf>
