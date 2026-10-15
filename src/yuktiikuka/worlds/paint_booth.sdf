@@ -6,7 +6,7 @@
   Frame (same as our Python planning scripts and the robot):
     origin = centre of the car's parking spot on the floor
     x      = along the conveyor (car enters at -x, leaves at +x)
-    y      = across the booth (+y is the side with the support rooms)
+    y      = across the booth (+y is the far glass wall)
     z      = up
     units  = metres
 
@@ -14,8 +14,12 @@
     Entry zone   x -6 .. -4   y -2.5 .. 2.5   (2 x 5 m)
     Paint booth  x -4 ..  4   y -2.5 .. 2.5   (8 x 5 m)
     Exit zone    x  4 ..  6   y -2.5 .. 2.5   (2 x 5 m)
-    Rooms        3.0 m, 2.5 m, 4.0 m wide, 2.5 m deep, along +y
-    Overall      about 12 x 8 m
+    Overall      about 12 x 5 m (booth zone only)
+
+  Change from the reference drawing: the support rooms (paint mixing,
+  control, storage) are outside the robot cell's scope and are omitted.
+  Both long walls are glass viewing windows, as in real booths, so the
+  painting can be watched from either side without entering the spray area.
 
   SDF vs URDF: URDF describes ONE robot. SDF can describe a whole WORLD:
   physics settings, lights, the ground, and any number of models.
@@ -88,7 +92,7 @@
       Every wall below is a box:  <size> length_x length_y height </size>
       and its <pose> is its CENTRE:  x y z roll pitch yaw
       Walls are 4.5 m tall (centre z = 2.25), above the planned 3.8 m
-      gantry rails, and 0.2 m thick (room dividers 0.15 m).
+      gantry rails, and 0.2 m thick.
     ====================================================================== -->
     <model name="paint_booth_building">
       <static>true</static>
@@ -111,17 +115,20 @@
           </material>
         </visual>
 
-        <!-- ========== Back outer wall (y = 5.3), behind the rooms ========== -->
-        <collision name="wall_back_col">
-          <pose>0 5.3 2.25 0 0 0</pose>
+        <!-- ========== Back outer wall (y = 2.6), see-through ========== -->
+        <!-- Viewing window on the far side of the car, so painting can be
+             watched from both sides. Replaces the support rooms. -->
+        <collision name="wall_back_glass_col">
+          <pose>0 2.6 2.25 0 0 0</pose>
           <geometry><box><size>12.4 0.2 4.5</size></box></geometry>
         </collision>
-        <visual name="wall_back_vis">
-          <pose>0 5.3 2.25 0 0 0</pose>
+        <visual name="wall_back_glass_vis">
+          <pose>0 2.6 2.25 0 0 0</pose>
           <geometry><box><size>12.4 0.2 4.5</size></box></geometry>
+          <transparency>0.8</transparency>
           <material>
-            <ambient>0.85 0.85 0.82 1</ambient>
-            <diffuse>0.85 0.85 0.82 1</diffuse>
+            <ambient>0.7 0.8 0.9 1</ambient>
+            <diffuse>0.7 0.8 0.9 1</diffuse>
           </material>
         </visual>
 
@@ -139,12 +146,12 @@
           <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
         </visual>
         <collision name="wall_left_b_col">
-          <pose>-6.1 3.45 2.25 0 0 0</pose>
-          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+          <pose>-6.1 2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
         </collision>
         <visual name="wall_left_b_vis">
-          <pose>-6.1 3.45 2.25 0 0 0</pose>
-          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+          <pose>-6.1 2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
           <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
         </visual>
 
@@ -159,97 +166,13 @@
           <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
         </visual>
         <collision name="wall_right_b_col">
-          <pose>6.1 3.45 2.25 0 0 0</pose>
-          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+          <pose>6.1 2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
         </collision>
         <visual name="wall_right_b_vis">
-          <pose>6.1 3.45 2.25 0 0 0</pose>
-          <geometry><box><size>0.2 3.9 4.5</size></box></geometry>
+          <pose>6.1 2.1 2.25 0 0 0</pose>
+          <geometry><box><size>0.2 1.2 4.5</size></box></geometry>
           <material><ambient>0.85 0.85 0.82 1</ambient><diffuse>0.85 0.85 0.82 1</diffuse></material>
-        </visual>
-
-        <!-- ========== Partition wall (y = 2.6) between booth and rooms ==========
-             Split into 4 pieces to leave a 0.9 m DOOR into each room,
-             like the door arcs on the drawing:
-               door A: x -2.9 .. -2.0   door B: x -0.3 .. 0.6   door C: x 3.6 .. 4.5 -->
-        <collision name="partition_1_col">
-          <pose>-4.45 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>3.1 0.2 4.5</size></box></geometry>
-        </collision>
-        <visual name="partition_1_vis">
-          <pose>-4.45 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>3.1 0.2 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-        <collision name="partition_2_col">
-          <pose>-1.15 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>1.7 0.2 4.5</size></box></geometry>
-        </collision>
-        <visual name="partition_2_vis">
-          <pose>-1.15 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>1.7 0.2 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-        <collision name="partition_3_col">
-          <pose>2.1 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>3.0 0.2 4.5</size></box></geometry>
-        </collision>
-        <visual name="partition_3_vis">
-          <pose>2.1 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>3.0 0.2 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-        <collision name="partition_4_col">
-          <pose>5.25 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>1.5 0.2 4.5</size></box></geometry>
-        </collision>
-        <visual name="partition_4_vis">
-          <pose>5.25 2.6 2.25 0 0 0</pose>
-          <geometry><box><size>1.5 0.2 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-
-        <!-- ========== Room dividers (along y, from y 2.7 to 5.2) ==========
-             Rooms placed side by side and centred: 3.0 + 2.5 + 4.0 = 9.5 m,
-               Room A x -4.75 .. -1.75  (3.0 m)  e.g. paint mixing room
-               Room B x -1.75 ..  0.75  (2.5 m)  e.g. control room
-               Room C x  0.75 ..  4.75  (4.0 m)  e.g. storage / maintenance
-             The two 1.25 m bays left over at each end are closed off. -->
-        <collision name="divider_1_col">
-          <pose>-4.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-        </collision>
-        <visual name="divider_1_vis">
-          <pose>-4.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-        <collision name="divider_2_col">
-          <pose>-1.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-        </collision>
-        <visual name="divider_2_vis">
-          <pose>-1.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-        <collision name="divider_3_col">
-          <pose>0.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-        </collision>
-        <visual name="divider_3_vis">
-          <pose>0.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
-        </visual>
-        <collision name="divider_4_col">
-          <pose>4.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-        </collision>
-        <visual name="divider_4_vis">
-          <pose>4.75 3.95 2.25 0 0 0</pose>
-          <geometry><box><size>0.15 2.5 4.5</size></box></geometry>
-          <material><ambient>0.8 0.8 0.78 1</ambient><diffuse>0.8 0.8 0.78 1</diffuse></material>
         </visual>
 
         <!-- ========== Columns at the booth boundaries (x = -4 and x = 4) ==========
@@ -323,6 +246,188 @@
           <pose>0 0 0.008 0 0 0</pose>
           <geometry><box><size>12 0.08 0.004</size></box></geometry>
           <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+
+      </link>
+    </model>
+
+
+    <!-- =====================================================================
+      Car body on a skid, standing on the roller conveyor.
+
+      Factory paint lines carry the bare body ("body in white") on a steel
+      frame called a SKID. The skid rides on a roller conveyor that runs
+      from the entry opening to the exit opening, and stops at the paint spot.
+
+      Heights (metres, from the floor):
+        0.00 .. 0.05   conveyor rails      (visual only)
+        0.05 .. 0.15   skid runners        (two long bars the skid slides on)
+        0.15 .. 0.23   sill cross bars     (reach out under the sills)
+        0.23 .. 0.375  skid posts          (meet the measured sill edges)
+        0.337 .. 1.60  car body            (1.263 m tall, from prepare_car.py;
+                                            lowest point 0.337, sills at ~0.375)
+      So body + skid = 1.6 m overall, as the brief asks.
+
+      NOSE DIRECTION: the car should face +x (toward the green exit zone).
+      If the hood points at the yellow entry zone instead, change the yaw
+      (last number) of the car's two <pose> lines from 0 to 3.14159.
+
+      Static for now: the car parks at x = 0. Making the conveyor actually
+      move the car is a stretch goal for the demo video.
+    ====================================================================== -->
+    <model name="car_on_skid">
+      <static>true</static>
+      <link name="body">
+
+        <!-- ===== The car body: detailed mesh for looks, simple mesh for collisions ===== -->
+        <!-- Same origin trick as before: prepare_car.py put the body's bottom
+             at z = 0, so lifting it by the skid height (0.337) seats it on the posts. -->
+        <visual name="car_visual">
+          <pose>0 0 0.337 0 0 0</pose>
+          <geometry>
+            <mesh><uri>package://yuktiikuka/meshes/car/car_visual.stl</uri></mesh>
+          </geometry>
+          <!-- Light grey-blue, like the electro-coat primer a body has before painting -->
+          <material>
+            <ambient>0.62 0.66 0.72 1</ambient>
+            <diffuse>0.62 0.66 0.72 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name="car_collision">
+          <pose>0 0 0.337 0 0 0</pose>
+          <geometry>
+            <mesh><uri>package://yuktiikuka/meshes/car/car_collision.stl</uri></mesh>
+          </geometry>
+        </collision>
+
+        <!-- ===== Skid runners: two long bars along x ===== -->
+        <!-- 4.4 m long, 0.10 m wide, 0.10 m tall, centred at z = 0.10 (0.05 .. 0.15),
+             0.55 m either side of the centre line: under the car's sills. -->
+        <visual name="runner_left_vis">
+          <pose>0 0.55 0.10 0 0 0</pose>
+          <geometry><box><size>4.4 0.10 0.10</size></box></geometry>
+          <material><ambient>0.25 0.25 0.28 1</ambient><diffuse>0.25 0.25 0.28 1</diffuse></material>
+        </visual>
+        <collision name="runner_left_col">
+          <pose>0 0.55 0.10 0 0 0</pose>
+          <geometry><box><size>4.4 0.10 0.10</size></box></geometry>
+        </collision>
+        <visual name="runner_right_vis">
+          <pose>0 -0.55 0.10 0 0 0</pose>
+          <geometry><box><size>4.4 0.10 0.10</size></box></geometry>
+          <material><ambient>0.25 0.25 0.28 1</ambient><diffuse>0.25 0.25 0.28 1</diffuse></material>
+        </visual>
+        <collision name="runner_right_col">
+          <pose>0 -0.55 0.10 0 0 0</pose>
+          <geometry><box><size>4.4 0.10 0.10</size></box></geometry>
+        </collision>
+
+        <!-- ===== Cross bars: tie the two runners together into one frame ===== -->
+        <visual name="crossbar_front_vis">
+          <pose>1.45 0 0.10 0 0 0</pose>
+          <geometry><box><size>0.08 1.2 0.08</size></box></geometry>
+          <material><ambient>0.25 0.25 0.28 1</ambient><diffuse>0.25 0.25 0.28 1</diffuse></material>
+        </visual>
+        <collision name="crossbar_front_col">
+          <pose>1.45 0 0.10 0 0 0</pose>
+          <geometry><box><size>0.08 1.2 0.08</size></box></geometry>
+        </collision>
+        <visual name="crossbar_rear_vis">
+          <pose>-1.45 0 0.10 0 0 0</pose>
+          <geometry><box><size>0.08 1.2 0.08</size></box></geometry>
+          <material><ambient>0.25 0.25 0.28 1</ambient><diffuse>0.25 0.25 0.28 1</diffuse></material>
+        </visual>
+        <collision name="crossbar_rear_col">
+          <pose>-1.45 0 0.10 0 0 0</pose>
+          <geometry><box><size>0.08 1.2 0.08</size></box></geometry>
+        </collision>
+
+        <!-- ===== Sill supports  =====
+             Measured with measure_skid_points.py: the scanned body is an open
+             shell, so the posts stand under the lowest edge of the sills,
+             between the wheel arches, at x = +-0.9 and y = +-0.81.
+
+             Stack, from the floor:
+               0.15        top of the skid runners
+               0.15..0.23  sill cross bar (0.08 tall, sits on the runners)
+               0.23..0.375 post (0.145 tall), top meets the sill edge
+
+             Measured sill heights: 0.380, 0.376, 0.370 m, and 0.466 m at the
+             rear left. The rear left value is a scan defect (a missing patch
+             of the sill), since a real body is symmetric, so all four posts
+             use 0.375 m and the small rear-left gap is documented. -->
+
+        <!-- Cross bars sit on top of the runners and reach out under the sills -->
+        <visual name="sill_bar_front_vis">
+          <pose>0.9 0 0.19 0 0 0</pose>
+          <geometry><box><size>0.08 1.7 0.08</size></box></geometry>
+          <material><ambient>0.25 0.25 0.28 1</ambient><diffuse>0.25 0.25 0.28 1</diffuse></material>
+        </visual>
+        <collision name="sill_bar_front_col">
+          <pose>0.9 0 0.19 0 0 0</pose>
+          <geometry><box><size>0.08 1.7 0.08</size></box></geometry>
+        </collision>
+        <visual name="sill_bar_rear_vis">
+          <pose>-0.9 0 0.19 0 0 0</pose>
+          <geometry><box><size>0.08 1.7 0.08</size></box></geometry>
+          <material><ambient>0.25 0.25 0.28 1</ambient><diffuse>0.25 0.25 0.28 1</diffuse></material>
+        </visual>
+        <collision name="sill_bar_rear_col">
+          <pose>-0.9 0 0.19 0 0 0</pose>
+          <geometry><box><size>0.08 1.7 0.08</size></box></geometry>
+        </collision>
+
+        <!-- Four posts: 0.145 tall, centre z = 0.23 + 0.145/2 = 0.3025 -->
+        <visual name="post_fl_vis">
+          <pose>0.9 0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+          <material><ambient>0.85 0.55 0.15 1</ambient><diffuse>0.85 0.55 0.15 1</diffuse></material>
+        </visual>
+        <collision name="post_fl_col">
+          <pose>0.9 0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+        </collision>
+        <visual name="post_fr_vis">
+          <pose>0.9 -0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+          <material><ambient>0.85 0.55 0.15 1</ambient><diffuse>0.85 0.55 0.15 1</diffuse></material>
+        </visual>
+        <collision name="post_fr_col">
+          <pose>0.9 -0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+        </collision>
+        <visual name="post_rl_vis">
+          <pose>-0.9 0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+          <material><ambient>0.85 0.55 0.15 1</ambient><diffuse>0.85 0.55 0.15 1</diffuse></material>
+        </visual>
+        <collision name="post_rl_col">
+          <pose>-0.9 0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+        </collision>
+        <visual name="post_rr_vis">
+          <pose>-0.9 -0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+          <material><ambient>0.85 0.55 0.15 1</ambient><diffuse>0.85 0.55 0.15 1</diffuse></material>
+        </visual>
+        <collision name="post_rr_col">
+          <pose>-0.9 -0.81 0.3025 0 0 0</pose>
+          <geometry><box><size>0.08 0.08 0.145</size></box></geometry>
+        </collision>
+
+        <!-- ===== Roller conveyor rails: entry wall to exit wall (visual only) ===== -->
+        <!-- 12 m long, under the skid runners, 0.05 m tall. Visual only: nothing
+             needs to collide with it, and it keeps the physics cheap. -->
+        <visual name="conveyor_left">
+          <pose>0 0.55 0.025 0 0 0</pose>
+          <geometry><box><size>12 0.14 0.05</size></box></geometry>
+          <material><ambient>0.45 0.45 0.48 1</ambient><diffuse>0.45 0.45 0.48 1</diffuse></material>
+        </visual>
+        <visual name="conveyor_right">
+          <pose>0 -0.55 0.025 0 0 0</pose>
+          <geometry><box><size>12 0.14 0.05</size></box></geometry>
+          <material><ambient>0.45 0.45 0.48 1</ambient><diffuse>0.45 0.45 0.48 1</diffuse></material>
         </visual>
 
       </link>

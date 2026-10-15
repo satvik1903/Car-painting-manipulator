@@ -109,7 +109,7 @@
     <xacro:gz_joint name="$(arg prefix)joint_5" initial="0.0"/>
     <xacro:gz_joint name="$(arg prefix)joint_6" initial="0.0"/>
     <xacro:gz_joint name="$(arg prefix)gantry_x_joint" initial="0.0"/>
-    <xacro:gz_joint name="$(arg prefix)gantry_y_joint" initial="0.0"/>
+    <xacro:gz_joint name="$(arg prefix)gantry_y_joint" initial="-1.5"/>
   </ros2_control>
 
     <!-- ============ Gazebo plugin ============ -->
