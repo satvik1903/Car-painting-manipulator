@@ -1,14 +1,23 @@
-# colcon build output
+cd ~/Yuktii_Assesment
+cat > .gitignore << 'EOF'
+# ===== colcon build output (regenerated on every machine) =====
 build/
 install/
 log/
 
-# Python cache
+# ===== Python =====
 __pycache__/
 *.pyc
+tools/.venv/
 
-# Assessment brief (private, not for a public repo)
+# ===== Raw downloads (large, only needed once) =====
+# The processed car meshes in src/yuktiikuka/meshes/car/ ARE committed.
+models_raw/
+
+# ===== Private files, not for a public repo =====
 *.pdf
+*.docx
 
-# Editor files
+# ===== Editor settings =====
 .vscode/
+EOF
