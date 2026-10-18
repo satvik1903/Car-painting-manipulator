@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: yuktiikuka
+    relative_path: urdf/kr20_r3100.urdf.xacro
+  srdf:
+    relative_path: config/kr20_r3100.srdf
+  package_settings:
+    author_name: Satvik Tajane
+    author_email: tajane.s@northeastern.edu
+    generated_timestamp: 1792296262
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
