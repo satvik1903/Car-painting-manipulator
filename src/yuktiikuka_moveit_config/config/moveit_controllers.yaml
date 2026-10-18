@@ -1,0 +1,33 @@
+# moveit_controllers.yaml
+# Tells MoveIt which controller to send each planned trajectory to.
+# The names MUST match the controllers running in Gazebo (kr20_controllers.yaml),
+# otherwise MoveIt plans fine but nothing moves.
+
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - arm_controller
+    - gantry_controller
+
+  # Paints and moves the gun: the six KUKA joints
+  arm_controller:
+    type: FollowJointTrajectory          # the action type joint_trajectory_controller provides
+    action_ns: follow_joint_trajectory   # full action name: /arm_controller/follow_joint_trajectory
+    default: true
+    joints:
+      - joint_1
+      - joint_2
+      - joint_3
+      - joint_4
+      - joint_5
+      - joint_6
+
+  # Moves between stations: the two gantry slide joints
+  gantry_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory   # /gantry_controller/follow_joint_trajectory
+    default: true
+    joints:
+      - gantry_x_joint
+      - gantry_y_joint

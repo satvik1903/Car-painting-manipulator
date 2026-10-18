@@ -7,44 +7,49 @@ default_acceleration_scaling_factor: 0.1
 
 # Specific joint properties can be changed with the keys [max_position, min_position, max_velocity, max_acceleration]
 # Joint limits can be turned off with [has_velocity_limits, has_acceleration_limits]
+# Limits MoveIt uses when timing trajectories.
+# Velocities come from the URDF (KUKA datasheet values).
+# KUKA does not publish joint accelerations, so these are conservative
+# assumptions; scaled down further at runtime by the scaling factors below.
+
 joint_limits:
   gantry_x_joint:
     has_velocity_limits: true
-    max_velocity: 0.5
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 0.5          # m/s, matches the URDF
+    has_acceleration_limits: true
+    max_acceleration: 0.5      # m/s^2
   gantry_y_joint:
     has_velocity_limits: true
     max_velocity: 0.5
-    has_acceleration_limits: false
-    max_acceleration: 0
+    has_acceleration_limits: true
+    max_acceleration: 0.5
   joint_1:
     has_velocity_limits: true
-    max_velocity: 3.14159265358979
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.1416       # rad/s
+    has_acceleration_limits: true
+    max_acceleration: 2.0      # rad/s^2
   joint_2:
     has_velocity_limits: true
-    max_velocity: 2.87979326579064
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.8798
+    has_acceleration_limits: true
+    max_acceleration: 2.0
   joint_3:
     has_velocity_limits: true
-    max_velocity: 2.7925268031909298
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.7925
+    has_acceleration_limits: true
+    max_acceleration: 2.0
   joint_4:
     has_velocity_limits: true
-    max_velocity: 6.2831853071795898
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 6.2832
+    has_acceleration_limits: true
+    max_acceleration: 4.0
   joint_5:
     has_velocity_limits: true
-    max_velocity: 6.2831853071795898
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 6.2832
+    has_acceleration_limits: true
+    max_acceleration: 4.0
   joint_6:
     has_velocity_limits: true
-    max_velocity: 10.995574287564301
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 10.9956
+    has_acceleration_limits: true
+    max_acceleration: 6.0
