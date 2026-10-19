@@ -15,14 +15,14 @@ default_acceleration_scaling_factor: 0.1
 joint_limits:
   gantry_x_joint:
     has_velocity_limits: true
-    max_velocity: 0.5          # m/s, matches the URDF
+    max_velocity: 1.0          # m/s, matches the URDF
     has_acceleration_limits: true
-    max_acceleration: 0.5      # m/s^2
+    max_acceleration: 1.0      # m/s^2
   gantry_y_joint:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.0
     has_acceleration_limits: true
-    max_acceleration: 0.5
+    max_acceleration: 1.0
   joint_1:
     has_velocity_limits: true
     max_velocity: 3.1416       # rad/s

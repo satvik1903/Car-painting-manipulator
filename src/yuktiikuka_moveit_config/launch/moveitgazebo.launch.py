@@ -60,5 +60,13 @@ def generate_launch_description():
             sim_time,
         ],
     )
+        # Loads the car and booth obstacles into MoveIt's planning scene (R2).
+    # Waits for move_group by itself, so the start order doesn't matter.
+    scene_setup = Node(
+        package="yuktiikuka",
+        executable="planning_scene_setup.py",
+        output="screen",
+        parameters=[sim_time],
+    )
 
-    return LaunchDescription([move_group, rviz])
+    return LaunchDescription([move_group, rviz, scene_setup])

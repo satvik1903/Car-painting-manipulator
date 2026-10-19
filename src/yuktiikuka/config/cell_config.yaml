@@ -1,0 +1,86 @@
+# =============================================================================
+# cell_config.yaml
+# Single source of truth for the painting cell (DESIGN.md, decision D4).
+# Read by: planning_scene_setup.py (now), path_generator.py and
+# paint_executor.py (later). Every value is tagged with the requirement or
+# assumption it comes from.
+#
+# Frame: "world" = centre of the car spot on the booth floor,
+#        x along the conveyor, y across, z up. Metres.
+# =============================================================================
+
+frame: world
+
+# --- The car (A1: fixed pose on the skid) ------------------------------------
+car:
+  collision_mesh: meshes/car/car_collision.stl   # ~5k triangles, for MoveIt
+  visual_mesh: meshes/car/car_visual.stl         # ~100k triangles, for paint paths
+  position: [0.0, 0.0, 0.337]                    # body bottom sits on the skid
+
+# --- Static obstacles for MoveIt's planning scene (R2: no collisions) --------
+# Boxes: size = [x, y, z] full lengths, position = box centre.
+# Numbers match worlds/paint_booth.sdf.
+obstacles:
+  - name: skid                    # runners, cross bars, posts and conveyor rails as one box
+    size: [4.4, 1.7, 0.375]
+    position: [0.0, 0.0, 0.1875]
+  - name: floor
+    size: [14.0, 6.0, 0.02]
+    position: [0.0, 0.0, -0.01]
+  - name: pillar_entry_front
+    size: [0.3, 0.3, 4.5]
+    position: [-4.0, -2.35, 2.25]
+  - name: pillar_entry_back
+    size: [0.3, 0.3, 4.5]
+    position: [-4.0, 2.35, 2.25]
+  - name: pillar_exit_front
+    size: [0.3, 0.3, 4.5]
+    position: [4.0, -2.35, 2.25]
+  - name: pillar_exit_back
+    size: [0.3, 0.3, 4.5]
+    position: [4.0, 2.35, 2.25]
+  - name: wall_front_glass
+    size: [12.4, 0.2, 4.5]
+    position: [0.0, -2.6, 2.25]
+  - name: wall_back_glass
+    size: [12.4, 0.2, 4.5]
+    position: [0.0, 2.6, 2.25]
+  - name: wall_entry_a            # end walls, either side of the 3 m car opening
+    size: [0.2, 1.2, 4.5]
+    position: [-6.1, -2.1, 2.25]
+  - name: wall_entry_b
+    size: [0.2, 1.2, 4.5]
+    position: [-6.1, 2.1, 2.25]
+  - name: wall_exit_a
+    size: [0.2, 1.2, 4.5]
+    position: [6.1, -2.1, 2.25]
+  - name: wall_exit_b
+    size: [0.2, 1.2, 4.5]
+    position: [6.1, 2.1, 2.25]
+
+# --- Painting process (used later by the generator and executor) -------------
+paint:
+  standoff: 0.25                # R3: gun to surface distance (m)
+  standoff_tolerance: 0.015     # R3: +- 1.5 cm
+  tilt_tolerance_deg: 5.0       # R4: from the surface normal; spin about the gun axis free
+  speed: 0.5                    # R5: m/s while painting
+  overlap: 0.5                  # R6: 50 %
+  spray_width: 0.20             # D2: band width at the standoff (m)
+  approach_distance: 0.15       # off-panel lead-in and lead-out (m)
+  max_failed_stripe_fraction: 0.10   # failure policy: stop a section above 10 %
+
+# R8: painted top to bottom, in this order
+sections: [roof, hood, tailgate, upper_sides, lower_sides, bumpers]
+
+# Section rules, measured with tools/measure_profile.py (D10: stripe direction)
+section_rules:
+  hood:
+    facing: up                 # surface normal points up (z)
+    x_range: [1.25, 2.15]      # from the cowl to the front edge
+    stripe_axis: y             # stripes run side to side (longest reachable direction)
+
+# Process step 9 and D9
+named_poses:
+  gantry_home: parked           # gantry beside the car (y = -1.5)
+  arm_home: home
+  arm_transit: transit
