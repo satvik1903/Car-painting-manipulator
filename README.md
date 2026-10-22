@@ -38,8 +38,6 @@ tools/
   reach_check.py, cellcheck.py early reach and coverage studies for the cell layout
   requirements.txt             Python packages for the tools
 docs/
-  DESIGN.md                    requirements, architecture, decisions, failure policy
-  EXPERIMENTS.md               every painting experiment, configuration and finding
   images/                      figures
 ```
 
