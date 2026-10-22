@@ -104,7 +104,6 @@ python3 path_generator.py              # all sections; opens a preview window
 5. **Failure policy.** A stripe is painted fully or not at all. Planning failures are skipped and reported; failures
    during motion stop the robot. Every unpainted stripe is listed at the end of a run.
 
-Details: `docs/DESIGN.md` and `docs/EXPERIMENTS.md`.
 
 ## Credits
 
