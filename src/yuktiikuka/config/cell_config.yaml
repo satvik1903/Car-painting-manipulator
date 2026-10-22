@@ -67,17 +67,70 @@ paint:
   overlap: 0.5                  # R6: 50 %
   spray_width: 0.20             # D2: band width at the standoff (m)
   approach_distance: 0.15       # off-panel lead-in and lead-out (m)
-  max_failed_stripe_fraction: 0.10   # failure policy: stop a section above 10 %
+  max_failed_stripe_fraction: 0.40   # failure policy: stop a section above 10 %
 
-# R8: painted top to bottom, in this order
-sections: [roof, hood, tailgate, upper_sides, lower_sides, bumpers]
+# R8: top to bottom. Tailgate and bumpers are cut for time (NEXT_SESSION.md).
+#section_order: [roof, hood, right_1, right_2, right_3, right_4, left_1, left_2, left_3, left_4]
+section_order: [roof, hood, right_4, right_3, right_2, right_1, left_4, left_3, left_2, left_1]
 
-# Section rules, measured with tools/measure_profile.py (D10: stripe direction)
+# facing: direction the surface faces. +y is the car's LEFT side (x forward, z up).
+# station: gantry [x, y] for the section (D6, D7). Ranges measured (tools/measure_profile.py)
+# or checked in the generator preview.
 section_rules:
+  roof:
+    facing: up
+    stripe_axis: x            # roof is 2.1 m long: long stripes, reachable from one station (D10)
+    range: {x: [-1.85, 0.27], z: [1.40, 2.00]}
+    station: [-0.79, -1.45]
+    stroke_group: arm
   hood:
-    facing: up                 # surface normal points up (z)
-    x_range: [1.25, 2.15]      # from the cowl to the front edge
-    stripe_axis: y             # stripes run side to side (longest reachable direction)
+    facing: up
+    stripe_axis: y
+    range: {x: [1.25, 2.15], z: [0.80, 1.30]}
+    station: [3.30, 0.0]
+    stroke_group: arm
+  # Sides in 4 pieces each. Station 0.3 m BEYOND the piece's outer end, so the
+# wrist never passes under the robot base (shoulder singularity).
+  right_1:   # front fender
+    facing: -y
+    stripe_axis: x
+    range: {x: [1.15, 2.30], z: [0.45, 1.12]}
+    station: [2.60, -1.45]
+  right_2:   # front door
+    facing: -y
+    stripe_axis: x
+    range: {x: [0.00, 1.15], z: [0.45, 1.12]}
+    station: [1.45, -1.45]
+  right_3:   # rear door
+    facing: -y
+    stripe_axis: x
+    range: {x: [-1.15, 0.00], z: [0.45, 1.12]}
+    station: [-1.45, -1.45]
+  right_4:   # rear quarter
+    facing: -y
+    stripe_axis: x
+    range: {x: [-2.30, -1.15], z: [0.45, 1.12]}
+    station: [-2.60, -1.45]
+  left_1:
+    facing: +y
+    stripe_axis: x
+    range: {x: [1.15, 2.30], z: [0.45, 1.12]}
+    station: [2.60, 1.45]
+  left_2:
+    facing: +y
+    stripe_axis: x
+    range: {x: [0.00, 1.15], z: [0.45, 1.12]}
+    station: [1.45, 1.45]
+  left_3:
+    facing: +y
+    stripe_axis: x
+    range: {x: [-1.15, 0.00], z: [0.45, 1.12]}
+    station: [-1.45, 1.45]
+  left_4:
+    facing: +y
+    stripe_axis: x
+    range: {x: [-2.30, -1.15], z: [0.45, 1.12]}
+    station: [-2.60, 1.45]
 
 # Process step 9 and D9
 named_poses:

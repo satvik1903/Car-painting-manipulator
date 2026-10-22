@@ -7,4 +7,7 @@ install(DIRECTORY config launch meshes urdf worlds
 install(PROGRAMS scripts/planning_scene_setup.py
   DESTINATION lib/${PROJECT_NAME}
 )
+install(PROGRAMS scripts/planning_scene_setup.py scripts/paint_executor.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 ament_package()

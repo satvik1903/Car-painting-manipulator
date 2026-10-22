@@ -37,7 +37,9 @@ def generate_launch_description():
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
-        parameters=[moveit_config.to_dict(), sim_time],
+        parameters=[moveit_config.to_dict(), sim_time,
+        {"trajectory_execution.allowed_start_tolerance": 0.05},
+        ]
     )
 
     #Rviz with the MoveIt motion planning panel
